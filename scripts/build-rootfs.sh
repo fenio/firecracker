@@ -40,9 +40,9 @@ debootstrap --include=systemd,systemd-sysv,openssh-server,iproute2,iptables,curl
 # ── Configure networking ─────────────────────────────────────
 echo "Configuring network..."
 
-cat > "${ROOTFS_DIR}/etc/systemd/network/20-eth0.network" <<'EOF'
+cat > "${ROOTFS_DIR}/etc/systemd/network/20-wired.network" <<'EOF'
 [Match]
-Name=eth0
+Name=en* eth*
 
 [Network]
 Address=172.16.0.2/24
@@ -65,8 +65,11 @@ cat > "${ROOTFS_DIR}/etc/hosts" <<'EOF'
 ::1 localhost
 EOF
 
-# DNS resolv.conf
-ln -sf /run/systemd/resolve/resolv.conf "${ROOTFS_DIR}/etc/resolv.conf"
+# DNS resolv.conf — use static file for early boot reliability
+cat > "${ROOTFS_DIR}/etc/resolv.conf" <<'EOF'
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+EOF
 
 # ── Configure SSH ─────────────────────────────────────────────
 echo "Configuring SSH..."
