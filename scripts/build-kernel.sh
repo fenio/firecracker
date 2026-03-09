@@ -12,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-KERNEL_VERSION="${KERNEL_VERSION:-6.12.6}"
+KERNEL_VERSION="${KERNEL_VERSION:-6.1.120}"
 KERNEL_MAJOR="${KERNEL_VERSION%%.*}"
 FIRECRACKER_CONFIG_URL="${FIRECRACKER_CONFIG_URL:-https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/resources/guest_configs/microvm-kernel-ci-x86_64-6.1.config}"
 
