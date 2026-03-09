@@ -61,4 +61,4 @@ sudo ROOTFS_PROFILE=tns-csi ./scripts/build-rootfs.sh
 
 ## Used by
 
-- [linux-firecracker-action](https://github.com/fenio/linux-firecracker-action) — GitHub Action to run commands in a Firecracker VM
+- [setup-firecracker](https://github.com/fenio/setup-firecracker) — GitHub Action to run commands in a Firecracker VM
