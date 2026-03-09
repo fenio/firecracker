@@ -67,7 +67,8 @@ jobs:
 
       - name: Compress rootfs
         run: |
-          zstd -T0 -10 dist/rootfs.ext4 -o dist/rootfs.ext4.zst
+          sudo zstd -T0 -10 dist/rootfs.ext4 -o dist/rootfs.ext4.zst
+          sudo chown -R $(id -u):$(id -g) dist/
           ls -lh dist/
 
       - name: Upload rootfs
