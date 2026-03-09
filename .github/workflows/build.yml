@@ -103,8 +103,10 @@ jobs:
         run: |
           FC_VERSION="v1.14.1"
           ARCH="$(uname -m)"
-          curl -fSL -o dist/firecracker \
-            "https://github.com/firecracker-microvm/firecracker/releases/download/${FC_VERSION}/firecracker-${FC_VERSION}-${ARCH}"
+          curl -fSL -o /tmp/firecracker.tgz \
+            "https://github.com/firecracker-microvm/firecracker/releases/download/${FC_VERSION}/firecracker-${FC_VERSION}-${ARCH}.tgz"
+          tar -xzf /tmp/firecracker.tgz -C /tmp
+          cp "/tmp/release-${FC_VERSION}-${ARCH}/firecracker-${FC_VERSION}-${ARCH}" dist/firecracker
           chmod +x dist/firecracker
 
       - name: Create release
