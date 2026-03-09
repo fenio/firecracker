@@ -1,17 +1,21 @@
 #!/bin/bash
-# Build a Linux kernel (vmlinux) for Firecracker with extended config.
+# Build a Linux kernel (vmlinux) for Firecracker with a given profile.
 #
 # Usage:
-#   ./scripts/build-kernel.sh
-#   KERNEL_VERSION=6.12.6 ./scripts/build-kernel.sh
+#   ./scripts/build-kernel.sh                        # builds "base" profile
+#   KERNEL_PROFILE=minimal ./scripts/build-kernel.sh
+#   KERNEL_PROFILE=tns-csi KERNEL_VERSION=6.12.6 ./scripts/build-kernel.sh
 #
-# Output: dist/vmlinux
+# Profiles: minimal, base, tns-csi  (see kernel-configs/)
+#
+# Output: dist/vmlinux-<profile>
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+KERNEL_PROFILE="${KERNEL_PROFILE:-base}"
 KERNEL_VERSION="${KERNEL_VERSION:-6.12.76}"
 KERNEL_MAJOR="${KERNEL_VERSION%%.*}"
 FIRECRACKER_VERSION="${FIRECRACKER_VERSION:-v1.15.0}"
@@ -20,7 +24,16 @@ FIRECRACKER_CONFIG_URL="${FIRECRACKER_CONFIG_URL:-https://raw.githubusercontent.
 WORKING_DIR="${PROJECT_ROOT}/working"
 DIST_DIR="${PROJECT_ROOT}/dist"
 
+PROFILE_CONFIG="${PROJECT_ROOT}/kernel-configs/${KERNEL_PROFILE}.config"
+if [ ! -f "$PROFILE_CONFIG" ]; then
+    echo "ERROR: Unknown profile '${KERNEL_PROFILE}'"
+    echo "Available profiles:"
+    ls -1 "${PROJECT_ROOT}/kernel-configs/"*.config 2>/dev/null | xargs -I{} basename {} .config
+    exit 1
+fi
+
 echo "=== Building Firecracker kernel ==="
+echo "  Profile: ${KERNEL_PROFILE}"
 echo "  Kernel:  ${KERNEL_VERSION}"
 echo "  Config:  ${FIRECRACKER_CONFIG_URL}"
 echo ""
@@ -49,18 +62,13 @@ fi
 echo "Downloading Firecracker base config..."
 curl -fSL -o "${KERNEL_SRC}/.config" "$FIRECRACKER_CONFIG_URL"
 
-EXTRA_CONFIG="${PROJECT_ROOT}/kernel-config-extra"
-if [ -f "$EXTRA_CONFIG" ]; then
-    ADDED=$(grep -cE '^CONFIG_' "$EXTRA_CONFIG" || true)
-    if [ "$ADDED" -gt 0 ]; then
-        echo "Merging extra config options..."
-        echo "" >> "${KERNEL_SRC}/.config"
-        echo "# === Extra options from kernel-config-extra ===" >> "${KERNEL_SRC}/.config"
-        grep -E '^CONFIG_' "$EXTRA_CONFIG" >> "${KERNEL_SRC}/.config"
-        echo "  Added ${ADDED} extra config options"
-    else
-        echo "No extra config options to merge"
-    fi
+ADDED=$(grep -cE '^CONFIG_' "$PROFILE_CONFIG" || true)
+if [ "$ADDED" -gt 0 ]; then
+    echo "Merging ${KERNEL_PROFILE} profile config..."
+    echo "" >> "${KERNEL_SRC}/.config"
+    echo "# === Profile: ${KERNEL_PROFILE} ===" >> "${KERNEL_SRC}/.config"
+    grep -E '^CONFIG_' "$PROFILE_CONFIG" >> "${KERNEL_SRC}/.config"
+    echo "  Added ${ADDED} config options"
 fi
 
 echo "Running olddefconfig..."
@@ -72,9 +80,10 @@ echo "Building vmlinux (this will take a while)..."
 make -C "$KERNEL_SRC" -j"$(nproc)" vmlinux
 
 # ── Collect output ────────────────────────────────────────────
-cp "${KERNEL_SRC}/vmlinux" "${DIST_DIR}/vmlinux"
+OUTPUT="${DIST_DIR}/vmlinux-${KERNEL_PROFILE}"
+cp "${KERNEL_SRC}/vmlinux" "$OUTPUT"
 
 echo ""
 echo "=== Kernel build complete ==="
-echo "  Output: ${DIST_DIR}/vmlinux"
-ls -lh "${DIST_DIR}/vmlinux"
+echo "  Output: ${OUTPUT}"
+ls -lh "$OUTPUT"

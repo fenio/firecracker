@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ['v*']
     paths:
-      - 'kernel-config-extra'
+      - 'kernel-configs/**'
       - 'scripts/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
@@ -21,9 +21,12 @@ permissions:
 
 jobs:
   build-kernel:
-    name: Build kernel
+    name: Build kernel (${{ matrix.profile }})
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    strategy:
+      matrix:
+        profile: [minimal, base, tns-csi]
     steps:
       - uses: actions/checkout@v4
 
@@ -40,14 +43,15 @@ jobs:
 
       - name: Build kernel
         run: |
+          KERNEL_PROFILE="${{ matrix.profile }}" \
           KERNEL_VERSION="${{ inputs.kernel_version || '6.12.76' }}" \
             ./scripts/build-kernel.sh
 
       - name: Upload vmlinux
         uses: actions/upload-artifact@v4
         with:
-          name: vmlinux
-          path: dist/vmlinux
+          name: vmlinux-${{ matrix.profile }}
+          path: dist/vmlinux-${{ matrix.profile }}
           retention-days: 30
 
   build-rootfs:
@@ -87,11 +91,12 @@ jobs:
     needs: [build-kernel, build-rootfs]
     runs-on: ubuntu-24.04
     steps:
-      - name: Download kernel artifact
+      - name: Download all kernel artifacts
         uses: actions/download-artifact@v4
         with:
-          name: vmlinux
+          pattern: vmlinux-*
           path: dist/
+          merge-multiple: true
 
       - name: Download rootfs artifact
         uses: actions/download-artifact@v4
@@ -113,7 +118,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/vmlinux
+            dist/vmlinux-minimal
+            dist/vmlinux-base
+            dist/vmlinux-tns-csi
             dist/rootfs.ext4.zst
             dist/id_rsa
             dist/id_rsa.pub
