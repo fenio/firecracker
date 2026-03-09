@@ -1,4 +1,4 @@
-# tns-csi rootfs profile — pre-install k3s and storage client tools.
+# tns-csi rootfs profile — pre-install k3s and storage client tools for https://github.com/fenio/tns-csi.
 # Sourced by build-rootfs.sh with ROOTFS_DIR set.
 
 echo "  Installing storage client tools..."

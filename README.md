@@ -8,7 +8,7 @@ Builds a Linux kernel and Ubuntu 24.04 rootfs for [Firecracker](https://github.c
 |---------|-------------|----------|
 | `minimal` | PCI VirtIO transport only | Boot a VM and run shell commands |
 | `base` | Networking support | VMs that need network access |
-| `tns-csi` | Networking + k3s + storage protocols | CSI driver testing with NVMe-oF, iSCSI, NFS, SMB |
+| [`tns-csi`](https://github.com/fenio/tns-csi) | Networking + k3s + storage protocols | CSI driver testing with NVMe-oF, iSCSI, NFS, SMB |
 
 All profiles use PCI VirtIO transport (`--enable-pci`).
 
@@ -17,7 +17,7 @@ All profiles use PCI VirtIO transport (`--enable-pci`).
 | Profile | Description |
 |---------|-------------|
 | `base` | Ubuntu 24.04 with systemd, SSH, networking |
-| `tns-csi` | Base + pre-installed k3s, nvme-cli, open-iscsi, nfs-common, cifs-utils |
+| [`tns-csi`](https://github.com/fenio/tns-csi) | Base + pre-installed k3s, nvme-cli, open-iscsi, nfs-common, cifs-utils |
 
 ## Release artifacts
 
