@@ -51,12 +51,16 @@ curl -fSL -o "${KERNEL_SRC}/.config" "$FIRECRACKER_CONFIG_URL"
 
 EXTRA_CONFIG="${PROJECT_ROOT}/kernel-config-extra"
 if [ -f "$EXTRA_CONFIG" ]; then
-    echo "Merging extra config options..."
-    echo "" >> "${KERNEL_SRC}/.config"
-    echo "# === Extra options from kernel-config-extra ===" >> "${KERNEL_SRC}/.config"
-    grep -E '^CONFIG_' "$EXTRA_CONFIG" >> "${KERNEL_SRC}/.config"
-    ADDED=$(grep -cE '^CONFIG_' "$EXTRA_CONFIG")
-    echo "  Added ${ADDED} extra config options"
+    ADDED=$(grep -cE '^CONFIG_' "$EXTRA_CONFIG" || true)
+    if [ "$ADDED" -gt 0 ]; then
+        echo "Merging extra config options..."
+        echo "" >> "${KERNEL_SRC}/.config"
+        echo "# === Extra options from kernel-config-extra ===" >> "${KERNEL_SRC}/.config"
+        grep -E '^CONFIG_' "$EXTRA_CONFIG" >> "${KERNEL_SRC}/.config"
+        echo "  Added ${ADDED} extra config options"
+    else
+        echo "No extra config options to merge"
+    fi
 fi
 
 echo "Running olddefconfig..."
