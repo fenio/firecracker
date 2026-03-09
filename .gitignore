@@ -1,0 +1,7 @@
+dist/
+working/
+*.bin
+*.ext4
+*.ext4.zst
+id_rsa
+id_rsa.pub
