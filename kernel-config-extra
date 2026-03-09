@@ -133,6 +133,13 @@ CONFIG_SUNRPC_GSS=y
 CONFIG_LOCKD=y
 CONFIG_GRACE_PERIOD=y
 
+# ── Virtio (required by Firecracker) ────────────────────────
+CONFIG_VIRTIO=y
+CONFIG_VIRTIO_MMIO=y
+CONFIG_VIRTIO_BLK=y
+CONFIG_VIRTIO_NET=y
+CONFIG_VIRTIO_CONSOLE=y
+
 # ── Block devices ────────────────────────────────────────────
 CONFIG_BLK_DEV=y
 CONFIG_BLK_DEV_LOOP=y
