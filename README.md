@@ -1,4 +1,4 @@
-# linux-firecracker
+# firecracker
 
 Builds a Linux kernel and Ubuntu 24.04 rootfs for [Firecracker](https://github.com/firecracker-microvm/firecracker) microVMs.
 
@@ -21,7 +21,7 @@ All profiles use PCI VirtIO transport (`--enable-pci`).
 
 ## Release artifacts
 
-Each [release](https://github.com/fenio/linux-firecracker/releases) includes:
+Each [release](https://github.com/fenio/firecracker/releases) includes:
 
 - `vmlinux-minimal` / `vmlinux-base` / `vmlinux-tns-csi` — kernel variants
 - `rootfs-base.ext4.zst` / `rootfs-tns-csi.ext4.zst` — rootfs variants (zstd-compressed)
