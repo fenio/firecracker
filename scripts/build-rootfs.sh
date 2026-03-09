@@ -2,9 +2,12 @@
 # Build an Ubuntu 24.04 rootfs for Firecracker.
 #
 # Usage:
-#   sudo ./scripts/build-rootfs.sh
+#   sudo ./scripts/build-rootfs.sh                        # builds "base" profile
+#   sudo ROOTFS_PROFILE=tns-csi ./scripts/build-rootfs.sh
 #
-# Output: dist/rootfs.ext4, dist/id_rsa, dist/id_rsa.pub
+# Profiles: base, tns-csi  (see rootfs-configs/)
+#
+# Output: dist/rootfs-<profile>.ext4, dist/id_rsa, dist/id_rsa.pub
 #
 # Must be run as root (debootstrap requires it).
 
@@ -13,13 +16,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+ROOTFS_PROFILE="${ROOTFS_PROFILE:-base}"
 ROOTFS_SIZE="${ROOTFS_SIZE:-2G}"
 DIST_DIR="${PROJECT_ROOT}/dist"
 WORKING_DIR="${PROJECT_ROOT}/working"
 ROOTFS_DIR="${WORKING_DIR}/rootfs"
 
 echo "=== Building Ubuntu 24.04 rootfs for Firecracker ==="
-echo "  Size: ${ROOTFS_SIZE}"
+echo "  Profile: ${ROOTFS_PROFILE}"
+echo "  Size:    ${ROOTFS_SIZE}"
 echo ""
 
 mkdir -p "$DIST_DIR" "$WORKING_DIR"
@@ -116,10 +121,18 @@ DefaultTimeoutStartSec=15s
 DefaultTimeoutStopSec=10s
 EOF
 
+# ── Apply profile-specific customizations ─────────────────────
+PROFILE_SCRIPT="${PROJECT_ROOT}/rootfs-configs/${ROOTFS_PROFILE}.sh"
+if [ -f "$PROFILE_SCRIPT" ]; then
+    echo ""
+    echo "Applying ${ROOTFS_PROFILE} profile..."
+    source "$PROFILE_SCRIPT"
+fi
+
 # ── Create rootfs image ──────────────────────────────────────
 echo "Creating ext4 image (${ROOTFS_SIZE})..."
 
-ROOTFS_IMG="${DIST_DIR}/rootfs.ext4"
+ROOTFS_IMG="${DIST_DIR}/rootfs-${ROOTFS_PROFILE}.ext4"
 truncate -s "$ROOTFS_SIZE" "$ROOTFS_IMG"
 mkfs.ext4 -F -d "$ROOTFS_DIR" "$ROOTFS_IMG"
 
@@ -127,4 +140,4 @@ echo ""
 echo "=== Rootfs build complete ==="
 echo "  Image:   ${ROOTFS_IMG}"
 echo "  SSH key: ${DIST_DIR}/id_rsa"
-ls -lh "${DIST_DIR}/rootfs.ext4" "${DIST_DIR}/id_rsa" "${DIST_DIR}/id_rsa.pub"
+ls -lh "$ROOTFS_IMG" "${DIST_DIR}/id_rsa" "${DIST_DIR}/id_rsa.pub"

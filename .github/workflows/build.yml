@@ -6,6 +6,7 @@ on:
     tags: ['v*']
     paths:
       - 'kernel-configs/**'
+      - 'rootfs-configs/**'
       - 'scripts/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
@@ -55,9 +56,12 @@ jobs:
           retention-days: 30
 
   build-rootfs:
-    name: Build rootfs
+    name: Build rootfs (${{ matrix.profile }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      matrix:
+        profile: [base, tns-csi]
     steps:
       - uses: actions/checkout@v4
 
@@ -67,20 +71,22 @@ jobs:
           sudo apt-get install -y -qq debootstrap e2fsprogs
 
       - name: Build rootfs
-        run: sudo ./scripts/build-rootfs.sh
+        run: |
+          sudo ROOTFS_PROFILE="${{ matrix.profile }}" \
+            ./scripts/build-rootfs.sh
 
       - name: Compress rootfs
         run: |
-          sudo zstd -T0 -10 dist/rootfs.ext4 -o dist/rootfs.ext4.zst
+          sudo zstd -T0 -10 dist/rootfs-${{ matrix.profile }}.ext4 -o dist/rootfs-${{ matrix.profile }}.ext4.zst
           sudo chown -R $(id -u):$(id -g) dist/
           ls -lh dist/
 
       - name: Upload rootfs
         uses: actions/upload-artifact@v4
         with:
-          name: rootfs
+          name: rootfs-${{ matrix.profile }}
           path: |
-            dist/rootfs.ext4.zst
+            dist/rootfs-${{ matrix.profile }}.ext4.zst
             dist/id_rsa
             dist/id_rsa.pub
           retention-days: 30
@@ -98,11 +104,12 @@ jobs:
           path: dist/
           merge-multiple: true
 
-      - name: Download rootfs artifact
+      - name: Download all rootfs artifacts
         uses: actions/download-artifact@v4
         with:
-          name: rootfs
+          pattern: rootfs-*
           path: dist/
+          merge-multiple: true
 
       - name: Download Firecracker
         run: |
@@ -121,7 +128,8 @@ jobs:
             dist/vmlinux-minimal
             dist/vmlinux-base
             dist/vmlinux-tns-csi
-            dist/rootfs.ext4.zst
+            dist/rootfs-base.ext4.zst
+            dist/rootfs-tns-csi.ext4.zst
             dist/id_rsa
             dist/id_rsa.pub
             dist/firecracker

@@ -4,8 +4,6 @@ Builds a Linux kernel and Ubuntu 24.04 rootfs for [Firecracker](https://github.c
 
 ## Kernel profiles
 
-Three kernel profiles are available, each building on Firecracker's upstream microvm config:
-
 | Profile | Description | Use case |
 |---------|-------------|----------|
 | `minimal` | PCI VirtIO transport only | Boot a VM and run shell commands |
@@ -14,14 +12,19 @@ Three kernel profiles are available, each building on Firecracker's upstream mic
 
 All profiles use PCI VirtIO transport (`--enable-pci`).
 
+## Rootfs profiles
+
+| Profile | Description |
+|---------|-------------|
+| `base` | Ubuntu 24.04 with systemd, SSH, networking |
+| `tns-csi` | Base + pre-installed k3s, nvme-cli, open-iscsi, nfs-common, cifs-utils |
+
 ## Release artifacts
 
 Each [release](https://github.com/fenio/linux-firecracker/releases) includes:
 
-- `vmlinux-minimal` — minimal kernel
-- `vmlinux-base` — base kernel with networking
-- `vmlinux-tns-csi` — full kernel for CSI testing
-- `rootfs.ext4.zst` — zstd-compressed Ubuntu 24.04 rootfs
+- `vmlinux-minimal` / `vmlinux-base` / `vmlinux-tns-csi` — kernel variants
+- `rootfs-base.ext4.zst` / `rootfs-tns-csi.ext4.zst` — rootfs variants (zstd-compressed)
 - `id_rsa` / `id_rsa.pub` — SSH keypair for VM access
 - `firecracker` — Firecracker binary
 
@@ -31,11 +34,14 @@ Each [release](https://github.com/fenio/linux-firecracker/releases) includes:
 # Build kernel (default: base profile)
 ./scripts/build-kernel.sh
 
-# Build a specific profile
+# Build a specific kernel profile
 KERNEL_PROFILE=tns-csi ./scripts/build-kernel.sh
 
-# Build rootfs (requires root)
+# Build rootfs (default: base profile, requires root)
 sudo ./scripts/build-rootfs.sh
+
+# Build a specific rootfs profile
+sudo ROOTFS_PROFILE=tns-csi ./scripts/build-rootfs.sh
 ```
 
 ### Requirements
@@ -50,6 +56,7 @@ sudo ./scripts/build-rootfs.sh
 | `KERNEL_PROFILE` | `base` | Kernel profile (`minimal`, `base`, `tns-csi`) |
 | `KERNEL_VERSION` | `6.12.76` | Linux kernel version |
 | `FIRECRACKER_VERSION` | `v1.15.0` | Firecracker version (for base config URL) |
+| `ROOTFS_PROFILE` | `base` | Rootfs profile (`base`, `tns-csi`) |
 | `ROOTFS_SIZE` | `2G` | Rootfs image size |
 
 ## Used by
