@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 KERNEL_PROFILE="${KERNEL_PROFILE:-base}"
-KERNEL_VERSION="${KERNEL_VERSION:-6.12.76}"
+KERNEL_VERSION="${KERNEL_VERSION:-6.18.16}"
 KERNEL_MAJOR="${KERNEL_VERSION%%.*}"
 FIRECRACKER_VERSION="${FIRECRACKER_VERSION:-v1.15.0}"
 FIRECRACKER_CONFIG_URL="${FIRECRACKER_CONFIG_URL:-https://raw.githubusercontent.com/firecracker-microvm/firecracker/${FIRECRACKER_VERSION}/resources/guest_configs/microvm-kernel-ci-x86_64-6.1.config}"

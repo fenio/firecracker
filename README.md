@@ -23,7 +23,7 @@ All profiles use PCI VirtIO transport (`--enable-pci`).
 
 Each [release](https://github.com/fenio/firecracker/releases) includes:
 
-- `vmlinux-minimal` / `vmlinux-base` / `vmlinux-tns-csi` — kernel variants
+- `vmlinux-<version>-<profile>` (e.g. `vmlinux-6.18.16-base`) — kernel variants for each version and profile
 - `rootfs-base.ext4.zst` / `rootfs-tns-csi.ext4.zst` — rootfs variants (zstd-compressed)
 - `id_rsa` / `id_rsa.pub` — SSH keypair for VM access
 - `firecracker` — Firecracker binary
@@ -31,11 +31,14 @@ Each [release](https://github.com/fenio/firecracker/releases) includes:
 ## Building locally
 
 ```bash
-# Build kernel (default: base profile)
+# Build kernel (default: base profile, kernel 6.18.16)
 ./scripts/build-kernel.sh
 
 # Build a specific kernel profile
 KERNEL_PROFILE=tns-csi ./scripts/build-kernel.sh
+
+# Build with a specific kernel version
+KERNEL_VERSION=6.12.76 ./scripts/build-kernel.sh
 
 # Build rootfs (default: base profile, requires root)
 sudo ./scripts/build-rootfs.sh
@@ -54,7 +57,7 @@ sudo ROOTFS_PROFILE=tns-csi ./scripts/build-rootfs.sh
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `KERNEL_PROFILE` | `base` | Kernel profile (`minimal`, `base`, `tns-csi`) |
-| `KERNEL_VERSION` | `6.12.76` | Linux kernel version |
+| `KERNEL_VERSION` | `6.18.16` | Linux kernel version (`6.12.76`, `6.18.16`) |
 | `FIRECRACKER_VERSION` | `v1.15.0` | Firecracker version (for base config URL) |
 | `ROOTFS_PROFILE` | `base` | Rootfs profile (`base`, `tns-csi`) |
 | `ROOTFS_SIZE` | `2G` | Rootfs image size |

@@ -11,10 +11,9 @@ on:
       - '.github/workflows/build.yml'
   workflow_dispatch:
     inputs:
-      kernel_version:
-        description: 'Linux kernel version'
+      kernel_versions:
+        description: 'Comma-separated kernel versions (leave empty for all defaults)'
         required: false
-        default: '6.12.76'
         type: string
 
 permissions:
@@ -22,12 +21,13 @@ permissions:
 
 jobs:
   build-kernel:
-    name: Build kernel (${{ matrix.profile }})
+    name: Build kernel (${{ matrix.profile }}, ${{ matrix.kernel_version }})
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       matrix:
         profile: [minimal, base, tns-csi]
+        kernel_version: [6.12.76, 6.18.16]
     steps:
       - uses: actions/checkout@v4
 
@@ -40,18 +40,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: working/linux-*.tar.xz
-          key: kernel-source-${{ inputs.kernel_version || '6.12.76' }}
+          key: kernel-source-${{ matrix.kernel_version }}
 
       - name: Build kernel
         run: |
           KERNEL_PROFILE="${{ matrix.profile }}" \
-          KERNEL_VERSION="${{ inputs.kernel_version || '6.12.76' }}" \
+          KERNEL_VERSION="${{ matrix.kernel_version }}" \
             ./scripts/build-kernel.sh
 
       - name: Upload vmlinux
         uses: actions/upload-artifact@v4
         with:
-          name: vmlinux-${{ matrix.profile }}
+          name: vmlinux-${{ matrix.kernel_version }}-${{ matrix.profile }}
           path: dist/vmlinux-${{ matrix.profile }}
           retention-days: 30
 
@@ -101,8 +101,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: vmlinux-*
-          path: dist/
-          merge-multiple: true
+          path: artifacts/
+          merge-multiple: false
 
       - name: Download all rootfs artifacts
         uses: actions/download-artifact@v4
@@ -110,6 +110,20 @@ jobs:
           pattern: rootfs-*
           path: dist/
           merge-multiple: true
+
+      - name: Organize kernel artifacts
+        run: |
+          mkdir -p dist
+          for dir in artifacts/vmlinux-*; do
+            # dir name is vmlinux-<kernel_version>-<profile>
+            dirname="$(basename "$dir")"
+            kernel_version="${dirname#vmlinux-}"
+            profile="${kernel_version#*-}"
+            kernel_version="${kernel_version%%-*}"
+            # rename to vmlinux-<kernel_version>-<profile>
+            cp "$dir"/vmlinux-* "dist/vmlinux-${kernel_version}-${profile}"
+          done
+          ls -lh dist/
 
       - name: Download Firecracker
         run: |
@@ -125,9 +139,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/vmlinux-minimal
-            dist/vmlinux-base
-            dist/vmlinux-tns-csi
+            dist/vmlinux-*
             dist/rootfs-base.ext4.zst
             dist/rootfs-tns-csi.ext4.zst
             dist/id_rsa
